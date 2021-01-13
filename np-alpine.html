@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Nice Passion</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@100;400;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://player.vimeo.com/api/player.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.js" defer></script>
+    <meta charset="utf-8">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .h-2px {
+            height: 2px;
+        }
+
+        #hamburger div:before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #ff6633;
+            transform: rotate(0deg);
+        }
+
+        #hamburger div:after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #ff6633;
+            transform: rotate(0deg);
+        }
+
+
+        #hamburger.active div {
+            background-color: rgba(0, 0, 0, 0)
+        }
+
+        #hamburger.active div:before {
+            content: '';
+            position: absolute;
+            top: 0px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #ff6633;
+            transform: rotate(45deg);
+        }
+
+
+        #hamburger.active div:after {
+            content: '';
+            position: absolute;
+            bottom: 0px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #ff6633;
+            transform: rotate(-45deg);
+        }
+
+        .bg-orange-500 {
+            background-color: #F48326;
+        }
+
+        .bg-orange-800 {
+            background-color: #ff6633;
+        }
+
+        .text-orange-500 {
+            color: #F48326;
+        }
+
+        .text-orange-800 {
+            color: #ff6633;
+        }
+
+        .ind-text {
+            display: none;
+        }
+
+        .ind-line {
+            width: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .ind.active .ind-text {
+            display: block;
+        }
+
+        .ind.active .ind-line {
+            width: 32px;
+        }
+    </style>
+</head>
+
+<body class="bg-black w-screen overflow-x-hidden min-h-screen" x-data="state">
+
+
+    <div class="fixed z-40 p-8 top-0 right-0">
+        <button id="hamburger" @click="toggleMenu()" class="border-none focus:outline-none w-8 h-8">
+            <div class="relative bg-orange-800 w-8 h-2px"></div>
+        </button>
+    </div>
+
+    <nav id="nav"
+        class="hidden bg-black bg-opacity-75 fixed z-30 inset-0 flex items-center justify-end px-16 lg:px-64 w-screen h-screen">
+        <ul x-data="state" class="text-white">
+            <template x-for="vid in vids" :key="vid.vimeoId">
+                <li @click="navigate(vid.id);" x-text="vid.name" class="cursor-pointer font-bold text-right text-3xl">
+                </li>
+            </template>
+        </ul>
+    </nav>
+
+    <div class="fixed z-40 hidden lg:block pointer-events-none top-0 right-0">
+        <div id="inds" class="flex justify-end items-center pr-8 h-screen">
+            <div x-data="state">
+                <template x-for="(vid, index) in vids" :key="vid.vimeoId">
+                    <div x-bind:data-indicator="vid.id"
+                        :class=" index == 0 ? `active ind flex items-center justify-end my-1` : `ind flex items-center justify-end my-2` ">
+
+                        <div @scroll.window.debounce="indicate()" x-text="index < 9 ? `0${index + 1}` : `${index + 1}`"
+                            class="ind-text tracking-wide font-mono font-bold text-orange-800 mr-2 text-sm"></div>
+
+                        <div class="ind-line relative bg-orange-800 h-2px"></div>
+
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+
+    <header class="absolute top-0 left-0 right-0 pointer-events-none">
+        <div class="container mx-auto py-4">
+            <img id="passion-logo" src="https://www.thatsnice.com/hubfs/nicepassion/np_logo_color.svg" alt="">
+        </div>
+    </header>
+
+    <div x-date="state">
+        <template x-for="vid in vids" :key="vid.vimeoId">
+            <div x-bind:id="vid.id"
+                class="vid-section w-screen relative overflow-hidden min-h-screen flex flex-col justify-end pb-32 pt-64">
+                <div class="absolute top-0 bg-cover w-screen min-h-screen bg-center z-10"
+                    x-bind:style="`background-image: url(${vid.image})`"></div>
+                <div class="absolute top-0 bg-cover w-screen min-h-screen bg-center z-10 bg-gradient-to-t from-black">
+                </div>
+                <div class="container mx-auto max-w-7xl px-6 lg:px-16 text-white z-20">
+                    <div class="w-full md:w-2/3 lg:w-1/2">
+                        <img :src="vid.logo" :alt="vid.name" />
+                        <div class="flex py-4 flex-row font-bold items-center">
+                            <p x-text="vid.chapters ? `${vid.chapters.length} Episodes` : `1 Episode`"></p>
+                            <p x-text="`&nbsp;|&nbsp;${vid.runtime}`"></p>
+                            <button x-on:click="playMe(vid.vimeoId)" class="mx-4 focus:outline-none">
+                                <img src="https://www.thatsnice.com/hubfs/nicepassion/play-btn.svg" alt="Play Button">
+                            </button>
+                            <p class="text-sm font-normal">Press Play To Watch</p>
+                        </div>
+                        <p></p>
+                        <p class="leading-loose" x-text="vid.desc"></p>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+
+
+    <div id="modal" class="hidden">
+        <div class=" bg-black bg-opacity-75 fixed inset-0 z-30 flex items-center justify-center w-screen h-screen">
+            <div class="container mx-auto p-0">
+                <iframe id="video" style="min-height:50vh;" class="w-full" src='https://player.vimeo.com/video/'
+                    frameborder='0' webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe>
+            </div>
+        </div>
+
+        <div class="fixed top-0 right-0 p-8 z-30">
+            <button class="text-5xl font-hairline text-orange-800 focus:outline-none" x-on:click="closeMe()">x</button>
+        </div>
+
+    </div>
+
+
+    <script>
+        let modal = document.querySelector('#modal')
+        let video = document.querySelector('#video')
+        let hamb = document.querySelector('#hamburger')
+        let nav = document.querySelector('#nav')
+        let inds = document.querySelector('#inds')
+
+        // toggle menu
+        function toggleMenu() {
+            if (nav.classList.contains('hidden')) {
+                hamb.classList.add('active');
+                nav.classList.remove('hidden');
+                inds.classList.add('hidden');
+            } else {
+                hamb.classList.remove('active');
+                nav.classList.add('hidden');
+                inds.classList.remove('hidden');
+            }
+        }
+
+        // right-hand indicators  
+        // right now the first item is auto indicated, need to change this if a page is loaded to a specific section  
+        function indicate() {
+            console.log('indicating');
+            let sections = document.querySelectorAll('.vid-section');
+            let inds = document.querySelectorAll('.ind');
+            let currentPos = window.screenX;
+            let arr = []
+
+            for (let ind of inds) {
+                ind.classList.remove('active');
+            }
+
+            for (let section of sections) {
+                let changePoint = section.offsetTop + (window.innerHeight / 2)
+                //console.log(changePoint)
+                if (changePoint > window.pageYOffset) {
+                    arr.push(section)
+                }
+            }
+
+            //console.log(arr)
+            let myId = arr[0].id;
+            //console.log(myId)
+            let myInd = document.querySelector('.ind[data-indicator="' + myId + '"]')
+            myInd.classList.add('active');
+        }
+
+        // open Modal && populate iFrame
+        function playMe(id) {
+            console.log(id);
+            video.src = 'https://player.vimeo.com/video/' + id + '?api=1&loop=1';
+            hamb.classList.add('hidden');
+            modal.classList.remove('hidden')
+                            inds.classList.add('hidden');
+            var player = new Vimeo.Player(iframe);
+            setTimeout(function () {
+                player.play();
+            }, 3000);
+        }
+
+        // close Modal pause Video
+        function closeMe() {
+            modal.classList.add('hidden');
+            hamb.classList.remove('hidden');
+                            inds.classList.remove('hidden');
+            var player = new Vimeo.Player(iframe);
+            player.pause();
+        }
+
+        // close Menu then go to section
+        function navigate(id) {
+            toggleMenu();
+            var section = document.getElementById(id);
+            var goto = section.offsetTop;
+            window.scrollTo(0, goto)
+            //goTo(id);
+            var currentUrl = location.protocol + '//' + location.host + location.pathname
+            var finalUrl = '' + currentUrl + '#' + id + '';
+            history.replaceState({
+                page: 1
+            }, currentUrl, finalUrl);
+            console.log('navigating to', id);
+            console.log(goto)
+        }
+
+        let state = {
+            showNav: false,
+            vids: [{
+                    id: `grit`,
+                    vimeoId: `420034916`,
+                    name: `Grit`,
+                    desc: `The separation of Ian’s parents left a void in his life, so he didn’t always feel comfortable in his own skin growing up. He found a way to bridge the gap mentally through fitness. These days, as a personal trainer, he has found inner peace and tries to inspire the same freedom of emotional strength through physical strength.`,
+                    image: `https://www.thatsnice.com/hubfs/nicepassion/NYGrit_header_@2x.jpg`,
+                    logo: `https://www.thatsnice.com/hubfs/nicepassion/NYGrit_logo.svg`,
+                    runtime: `4:30 Mintues`
+                },
+                {
+                    id: `surf`,
+                    vimeoId: `415602262`,
+                    name: `Surf`,
+                    desc: `With childhood dreams of extreme sports suppressed by traditional family beliefs in Japan, Utano left as a young woman, but found new responsibility in professional jobs and full time parenting in New York City. Undeterred, this determined lady fulfills her vision of freedom surfing the icy Atlantic waters off Coney Island.`,
+                    image: `https://www.thatsnice.com/hubfs/nicepassion/surf_web_header_@2x.jpg`,
+                    logo: `https://www.thatsnice.com/hubfs/nicepassion/surf_break_title.svg`,
+                    runtime: `6:00 Mintues`
+                },
+                {
+                    id: `goat`,
+                    vimeoId: `383799140`,
+                    name: `Goat`,
+                    desc: `As someone touched by tragedy, and who dedicated large parts of her life to family, this film’s subject unearthed her passion in 2013 as Farmer Flori. Now flourishing in business, inspiring many, and even helping substance abuse victims revitalize through her animals, she might be the G.O.A.T. lady in more ways than one!`,
+                    image: `https://www.thatsnice.com/hubfs/ThatsNice/emails/nicepassion/goat/goat_header_@2x_compressed.jpg`,
+                    logo: `https://www.thatsnice.com/hubfs/ThatsNice/emails/nicepassion/goat/goat_title.svg`,
+                    runtime: `7:00 Mintues`
+                }
+            ]
+
+        }
+    </script>
+</body>
+
+</html>
